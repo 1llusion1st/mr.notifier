@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/1llusion1st/mr.notifier/notifier"
@@ -77,6 +78,20 @@ func (c *CmdRunMRNotifier) Run() error {
 	admin := notifier.NewAdminHandler(c.ConfigFile, bot, &c.Config)
 	go admin.HandleUpdates(updates)
 
+	/* notify admin and channel */
+	err = (&RequestSendMessageToThead{Text: "bot started", ChatId: c.Config.Telegram.AdminChatId}).Send(c.Config.Telegram.BotApi)
+	if err != nil {
+		logrus.Errorf("can't send start message to admin: %v", err)
+	}
+	if c.Config.Telegram.ThreadId > 0 {
+		err = (&RequestSendMessageToThead{Text: "bot started", ChatId: c.Config.Telegram.ChannelChatId, MessageThreadId: c.Config.Telegram.ThreadId}).Send(c.Config.Telegram.BotApi)
+	} else {
+		err = (&RequestSendMessageToThead{Text: "bot started", ChatId: c.Config.Telegram.ChannelChatId}).Send(c.Config.Telegram.BotApi)
+	}
+	if err != nil {
+		logrus.Errorf("can't send start message to channel/group(thread): %v", err)
+	}
+
 	logrus.Infof("preparing http handler...")
 	http.HandleFunc(c.WebHookPath, func(w http.ResponseWriter, r *http.Request) {
 		logrus.Debugf("[%s] new request...", r.Method)
@@ -124,8 +139,7 @@ func (c *CmdRunMRNotifier) Run() error {
 			if len(reviewers) > 0 {
 				reviewersLinks = strings.Join(reviewers, ", ")
 			}
-
-			_, err := bot.Send(tgbotapi.NewMessage(c.Telegram.ChannelChatId, fmt.Sprintf(`#MR
+			message := tgbotapi.NewMessage(c.Telegram.ChannelChatId, fmt.Sprintf(`#MR
 			project: %s
 			by: %s
 			route: %s -> %s
@@ -141,7 +155,17 @@ func (c *CmdRunMRNotifier) Run() error {
 				tittle,
 				description,
 				reviewersLinks,
-			)))
+			))
+			if c.Config.Telegram.ThreadId > 0 {
+				message := RequestSendMessageToThead{
+					MessageThreadId: c.Config.Telegram.ThreadId,
+					ChatId:          message.ChatID,
+					Text:            message.Text,
+				}
+				err = message.Send(c.Telegram.BotApi)
+			} else {
+				_, err = bot.Send(message)
+			}
 			if err != nil {
 				logrus.Errorf("can't send message: %v", err)
 			}
@@ -342,4 +366,38 @@ type MergeRequestOpened struct {
 		Username  string `json:"username"`
 		AvatarURL string `json:"avatar_url"`
 	} `json:"reviewers"`
+}
+
+type RequestSendMessageToThead struct {
+	ChatId          int64  `json:"chat_id"`
+	MessageThreadId int64  `json:"message_thread_id,omitempty"`
+	Text            string `json:"text"`
+}
+
+func (r *RequestSendMessageToThead) Send(key string) error {
+	logrus.Debugf("creating request from: %v", *r)
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(r)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest(
+		http.MethodPost, fmt.Sprintf("https://api.telegram.org/bot%s/%s", key, "sendMessage"), &buf)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		logrus.Errorf("error status-code: %d", resp.StatusCode)
+
+	}
+	responseData, err := ioutil.ReadAll(resp.Body)
+	logrus.Debugf("response: %s", responseData)
+	return nil
 }

@@ -40,6 +40,7 @@ type Config struct {
 	Telegram struct {
 		BotApi        string `arg:"" name:"bot-api" yaml:"bot-api"`
 		ChannelChatId int64  `arg:"" name:"channel-id" yaml:"channel-chat-id"`
+		ThreadId      int64  `arg:"" name:"thread-id" yaml:"thread-id"`
 		AdminChatId   int64  `arg:"" name:"admin-id" yaml:"admin-chat-id"`
 	} `embed:"" prefix:"telegram."`
 	Projects    []ProjectInfo `kong:"-"`

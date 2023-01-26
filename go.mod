@@ -10,6 +10,7 @@ require (
 require (
 	github.com/go-playground/webhooks/v6 v6.0.1 // indirect
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect

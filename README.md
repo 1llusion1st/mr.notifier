@@ -24,7 +24,7 @@ Flags:
   -h, --help    Show context-sensitive help.
 
 Commands:
-  generate <config-file> <telegram.bot-api> <telegram.channel-id> <telegram.admin-id> <web-hook-path> <webhook-port> <new-projects> ...
+  generate <config-file> <telegram.bot-api> <telegram.channel-id> <telegram.admin-id> <telegram.thread-id> <web-hook-path> <webhook-port> <new-projects> ...
 
   run <config-file>
 
@@ -33,7 +33,7 @@ Run "mr.notifier <command> --help" for more information on a command.
 
 generate config example:
 ```bash
-docker run --rm -it notifier  generate - BOT-ID 123123123 23423432 /webhook 7777 http://example.com/gitlabhq/gitlab-test,@user2,@user3 http://some-project/user/repo,@user3,@user4,@user5 
+docker run --rm -it notifier  generate - BOT-ID 123123123 23423432 2 /webhook 7777 http://example.com/gitlabhq/gitlab-test,@user2,@user3 http://some-project/user/repo,@user3,@user4,@user5 
 ```
 
 ```yaml
@@ -41,6 +41,7 @@ telegram:
     bot-api: BOT-ID
     channel-chat-id: -123123123
     admin-chat-id: 23423432
+    thread-id: 2
 projects:
   - project: http://example.com/gitlabhq/gitlab-test
     reviewers:

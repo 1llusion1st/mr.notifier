@@ -2,6 +2,7 @@ telegram:
     bot-api: AAAAAAAAAAAAAAAAAAAAA
     channel-chat-id: -111111111
     admin-chat-id: -12222
+    thread-id: 2
 projects:
   - project: http://example.com/gitlabhq/gitlab-test
     reviewers:
@@ -9,7 +10,13 @@ projects:
       - '@user2'
   - project: project2
     reviewers:
-      - user3
-      - user4
+      - '@user3'
+      - '@user4'
+      - '@user5'
+reviewers:
+  - '@user2'
+  - '@user3'
+  - '@user4'
+  - '@user5'
 web-hook-path: /webhook
 web-hook-port: 7777
